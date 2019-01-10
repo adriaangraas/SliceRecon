@@ -151,9 +151,6 @@ class reconstructor {
             return;
         }
 
-        auto buf = std::vector<float>(pixels_);
-        memcpy(&buf[0], data, sizeof(float) * pixels_);
-
         if (shape[0] * shape[1] != pixels_) {
             util::log << LOG_FILE << util::lvl::warning
                       << "Received projection of wrong shape [(" << shape[0]
