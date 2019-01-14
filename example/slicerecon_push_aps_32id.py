@@ -22,6 +22,12 @@ import tomopy
     Other code is taken from slicerecon_push_flexdata.py in this repo, written by
     J. Buurlage, licensed with GPL 3.
     
+    Call this file with,
+      slicerecon_push_aps32id.py /path/to/dk_MCFG_1_p_s1_.h5
+    and if you didnt tweak the options, then
+      slicerecon_server --group-size 30 [--slice-size 1000] [--pyplugin]
+   
+    
     Adriaan
 '''
 
@@ -135,7 +141,7 @@ def main(arg):
         window_min_point = [-rx, -rx, -rz]  # x,y,z
         window_max_point = [rx, rx, rz]  # x,y,z
 
-        angles = np.linspace(0, np.pi, nproj, endpoint=False) # np.mod(theta[0:nproj], np.pi)
+        angles = np.linspace(0, np.pi, proj_count, endpoint=False) # np.mod(theta[0:nproj], np.pi)
 
         pub.send(tp.geometry_specification_packet(scene_id, window_min_point, window_max_point))
         pub.send(tp.parallel_beam_geometry_packet(scene_id, rows, cols, proj_count, angles))
@@ -156,6 +162,7 @@ def main(arg):
     exchange_base = "exchange"
     tomo_grp = '/'.join([exchange_base, 'data'])
 
+    j = 0
     for i in np.arange(1, data_size[0], subsampling):
         print("Pushing ", i, " of ", data_size[0])
         data = dxreader.read_hdf5(fname, tomo_grp, slc=((int(i),int(i)+1), sino))
@@ -172,7 +179,9 @@ def main(arg):
         # data = tomopy.remove_neg(data, val=0.00)
         # data[np.where(data == np.inf)] = 0.00
 
-        pub.send(tp.projection_packet(2, i, [rows, cols], np.ascontiguousarray(data[0].flatten())))
+        pub.send(tp.projection_packet(2, j, [rows, cols], np.ascontiguousarray(data[0].flatten())))
+        j = j+1
+
 
         # Here is a validation FBP-gridrec reconstruction, locally with TomoPy. 
         # rec = tomopy.recon(
